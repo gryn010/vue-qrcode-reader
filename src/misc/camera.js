@@ -28,7 +28,7 @@ const STREAM_API_NOT_SUPPORTED = !(
 
 let streamApiShimApplied = false;
 
-export default async function(constraints, videoEl) {
+export default async function (constraints, videoEl) {
   // At least in Chrome `navigator.mediaDevices` is undefined when the page is
   // loaded using HTTP rather than HTTPS. Thus `STREAM_API_NOT_SUPPORTED` is
   // initialized with `false` although the API might actually be supported.
@@ -47,6 +47,21 @@ export default async function(constraints, videoEl) {
     adapterFactory({ window });
     streamApiShimApplied = true;
   }
+
+  // List cameras and microphones.
+
+  let devices = await navigator.mediaDevices.enumerateDevices();
+
+  let lastdeviceId = false;
+  devices.forEach(function (device) {
+    if (device.kind == 'videoinput') {
+      lastdeviceId = device.deviceId;
+    }
+  });
+
+  constraints.video.deviceId = lastdeviceId ? { exact: lastdeviceId } : undefined;
+  if (lastdeviceId)
+    delete constraints.video.facingMode;
 
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
